@@ -7,6 +7,7 @@ import {
   fetchTopItems,
 } from "./api";
 import HeroPortrait from "./HeroPortrait";
+import HeroSelect from "./HeroSelect";
 import type { Hero, HeroWinRate, ItemStat, MatchupStat, PlayerProfile, SideStats } from "./types";
 
 type ActiveView = "winrate" | "items" | "matchups" | null;
@@ -101,6 +102,43 @@ function MatchupList({
         ))}
       </ol>
     </article>
+  );
+}
+
+function HeroAttributes({ hero }: { hero: Hero }) {
+  const rows: {
+    attr: "str" | "agi" | "int";
+    label: string;
+    base: number;
+    gain: number;
+  }[] = [
+    { attr: "str", label: "STR", base: hero.base_str, gain: hero.str_gain },
+    { attr: "agi", label: "AGI", base: hero.base_agi, gain: hero.agi_gain },
+    { attr: "int", label: "INT", base: hero.base_int, gain: hero.int_gain },
+  ];
+
+  const showGain = hero.primary_attr !== "all";
+
+  return (
+    <div className="hero-attrs">
+      {rows.map((row) => {
+        const isPrimary = hero.primary_attr === row.attr;
+        return (
+          <div
+            key={row.attr}
+            className={`hero-attr attr-${row.attr}${
+              isPrimary ? " is-primary" : ""
+            }`}
+          >
+            <span className="hero-attr-label">{row.label}</span>
+            <span className="hero-attr-value">{row.base}</span>
+            {showGain && isPrimary ? (
+              <span className="hero-attr-gain">+{row.gain.toFixed(1)}</span>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -306,23 +344,16 @@ export default function App() {
             </span>
           </label>
 
-          <label>
-            Hero
-            <select
+          <div className="field">
+            <span className="field-label">Hero</span>
+            <HeroSelect
+              heroes={heroes}
               value={heroId}
-              onChange={(event) => setHeroId(event.target.value)}
+              onChange={setHeroId}
               disabled={formDisabled || heroes.length === 0}
-            >
-              <option value="">
-                {bootLoading ? "Loading heroes..." : "Select a hero"}
-              </option>
-              {heroes.map((hero) => (
-                <option key={hero.id} value={hero.id}>
-                  {hero.localized_name}
-                </option>
-              ))}
-            </select>
-          </label>
+              loading={bootLoading}
+            />
+          </div>
 
           <div className="action-buttons">
             <button type="submit" disabled={formDisabled}>
@@ -356,10 +387,13 @@ export default function App() {
         {activeView && heroDisplay ? (
           <section className="results">
             <div className="results-layout">
-              <HeroPortrait
-                heroInternalName={heroDisplay.heroName}
-                heroLocalizedName={heroDisplay.heroLocalizedName}
-              />
+              <div className="hero-media">
+                <HeroPortrait
+                  heroInternalName={heroDisplay.heroName}
+                  heroLocalizedName={heroDisplay.heroLocalizedName}
+                />
+                {selectedHero ? <HeroAttributes hero={selectedHero} /> : null}
+              </div>
 
               <div className="results-body">
                 <div className="player-row">

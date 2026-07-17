@@ -1,7 +1,16 @@
+export type HeroAttribute = "str" | "agi" | "int" | "all";
+
 export interface Hero {
   id: number;
   name: string;
   localized_name: string;
+  primary_attr: HeroAttribute;
+  base_str: number;
+  base_agi: number;
+  base_int: number;
+  str_gain: number;
+  agi_gain: number;
+  int_gain: number;
 }
 
 export interface SideStats {

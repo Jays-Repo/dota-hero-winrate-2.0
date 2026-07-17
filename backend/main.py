@@ -37,6 +37,13 @@ class HeroSummary(BaseModel):
     id: int
     name: str
     localized_name: str
+    primary_attr: str
+    base_str: int
+    base_agi: int
+    base_int: int
+    str_gain: float
+    agi_gain: float
+    int_gain: float
 
 
 class PlayerProfile(BaseModel):
@@ -144,11 +151,13 @@ async def load_reference_data(
     if not HEROES_CACHE:
         heroes: Any = None
         try:
-            heroes = await fetch_json(client, "heroes")
+            # heroStats is a superset of /heroes: same identity fields plus base
+            # attributes and per-level gains used by the hero attribute display.
+            heroes = await fetch_json(client, "heroStats")
             if isinstance(heroes, list):
-                await db.save_reference(conn, "heroes", heroes)
+                await db.save_reference(conn, "heroStats", heroes)
         except OpenDotaError:
-            heroes = await db.load_reference(conn, "heroes")
+            heroes = await db.load_reference(conn, "heroStats")
             if heroes is None:
                 raise
         if isinstance(heroes, list):
@@ -385,6 +394,13 @@ async def list_heroes() -> list[HeroSummary]:
             id=hero["id"],
             name=hero["name"],
             localized_name=hero["localized_name"],
+            primary_attr=hero.get("primary_attr", "all"),
+            base_str=hero.get("base_str", 0),
+            base_agi=hero.get("base_agi", 0),
+            base_int=hero.get("base_int", 0),
+            str_gain=hero.get("str_gain", 0.0),
+            agi_gain=hero.get("agi_gain", 0.0),
+            int_gain=hero.get("int_gain", 0.0),
         )
         for hero in HEROES_CACHE
     ]
